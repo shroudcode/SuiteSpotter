@@ -47,10 +47,12 @@ export const getHotel = async (req, res, next) => {
 
 
 export const getHotels = async (req, res, next)=>{
-    const failed = false;
-    if(failed)return next(createError(401,"nope error has occured during getting all"));
+    
+    const {min, max, limit, ...others} = req.query 
     try{
-        const hotels = await Hotel.find() 
+        const hotels = await Hotel.find({
+            ...others,
+             cheapest: {$gt: min | 1, $lt: max || 999999}}).limit(Number(limit));
         res.status(200).json(hotels)
     }
     catch(err){
@@ -70,3 +72,26 @@ export const countByCity = async (req, res, next) => {
         next(err);
     }
 }
+
+export const countByType = async (req, res, next) => {
+    try{
+        const hotelcount = await Hotel.countDocuments({type: "hotel"})
+        const apartmentcount = await Hotel.countDocuments({type: "apartment"})
+        const resortcount = await Hotel.countDocuments({type: "resort"})
+        const villacount = await Hotel.countDocuments({type: "villa"})
+        const cabincount = await Hotel.countDocuments({type: "cabin"})
+        res.status(200).json(
+            [
+                {type : "hotel", count : hotelcount},
+                {type : "apartment", count : apartmentcount},
+                {type : "resort", count : resortcount},
+                {type : "villa", count : villacount},
+                {type : "cabin", count : cabincount}
+            ]
+        )
+    }
+    catch(err){
+        next(err);
+    }
+};
+
